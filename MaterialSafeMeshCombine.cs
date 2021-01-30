@@ -7,7 +7,7 @@ namespace Utility
 {
     public static class MaterialSafeMeshCombine
     {
-        public static void MeshCombine(this GameObject gameObject, params GameObject[] ignore)
+        public static void MeshCombine(this GameObject gameObject, bool destroyObjects = false, params GameObject[] ignore)
         {
             Vector3 originalPosition = gameObject.transform.position;
             Quaternion originalRotation = gameObject.transform.rotation;
@@ -90,9 +90,20 @@ namespace Utility
             Material[] materialsArray = materials.ToArray();
             meshRendererCombine.materials = materialsArray;
 
-            for (int i = 0; i < meshFilters.Length; i++)
+            if (destroyObjects)
             {
-                Destroy(meshFilters[i]);
+                for (int i = 0; i < meshFilters.Length; i++)
+                {
+                    Destroy(meshFilters[i].gameObject);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < meshFilters.Length; i++)
+                {
+                    Destroy(meshFilters[i].GetComponent<MeshRenderer>());
+                    Destroy(meshFilters[i]);
+                } 
             }
             gameObject.transform.position = originalPosition;
             gameObject.transform.rotation = originalRotation;
