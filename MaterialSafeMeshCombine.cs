@@ -11,12 +11,14 @@ namespace Utility
         {
             Vector3 originalPosition = gameObject.transform.position;
             Quaternion originalRotation = gameObject.transform.rotation;
+            Vector3 originalScale = gameObject.transform.localScale;
             gameObject.transform.position = Vector3.zero;
             gameObject.transform.rotation = Quaternion.identity;
+            gameObject.transform.localScale = Vector3.one;
 
             List<Material> materials = new List<Material>();
             List<List<CombineInstance>> combineInstanceLists = new List<List<CombineInstance>>();
-            MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>().Where(m => !ignore.Contains(m.gameObject)).ToArray();
+            MeshFilter[] meshFilters = gameObject.GetComponentsInChildren<MeshFilter>().Where(m => !ignore.Contains(m.gameObject) && !ignore.Any(i => m.transform.IsChildOf(i.transform))).ToArray();
 
             foreach (MeshFilter meshFilter in meshFilters)
             {
@@ -92,8 +94,31 @@ namespace Utility
 
             if (destroyObjects)
             {
+                IEnumerable<Transform> toDestroy = meshFilters.Select(m => m.transform);
+                List<Transform> toSave = new List<Transform>(8);
+                Transform child;
                 for (int i = 0; i < meshFilters.Length; i++)
                 {
+                    if (meshFilters[i].gameObject == gameObject)
+                    {
+                        continue;
+                    }
+                    //Check if any children should be saved
+                    for (int c = 0; c < meshFilters[i].transform.childCount; c++)
+                    {
+                        child = meshFilters[i].transform.GetChild(c);
+                        if (!toDestroy.Contains(child))
+                        {
+                            toSave.Add(child);
+                        }
+                    }
+                    //Move toSave children to root object
+                    for (int s = 0; s < toSave.Count; s++)
+                    {
+                        toSave[s].parent = gameObject.transform;
+                    }
+                    toSave.Clear();
+
                     Destroy(meshFilters[i].gameObject);
                 }
             }
@@ -101,12 +126,17 @@ namespace Utility
             {
                 for (int i = 0; i < meshFilters.Length; i++)
                 {
+                    if (meshFilters[i].gameObject == gameObject)
+                    {
+                        continue;
+                    }
                     Destroy(meshFilters[i].GetComponent<MeshRenderer>());
                     Destroy(meshFilters[i]);
                 } 
             }
             gameObject.transform.position = originalPosition;
             gameObject.transform.rotation = originalRotation;
+            gameObject.transform.localScale = originalScale;
         }
     }
 }
