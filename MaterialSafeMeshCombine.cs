@@ -7,7 +7,7 @@ namespace Utility
 {
     public static class MaterialSafeMeshCombine
     {
-        public static void MeshCombine(this GameObject gameObject, bool destroyObjects = false, params GameObject[] ignore)
+        public static MeshFilter MeshCombine(this GameObject gameObject, bool destroyObjects = false, params GameObject[] ignore)
         {
             Vector3 originalPosition = gameObject.transform.position;
             Quaternion originalRotation = gameObject.transform.rotation;
@@ -137,6 +137,7 @@ namespace Utility
             gameObject.transform.position = originalPosition;
             gameObject.transform.rotation = originalRotation;
             gameObject.transform.localScale = originalScale;
+            return meshFilterCombine;
         }
     }
 }
